@@ -8,8 +8,8 @@ import {
 
 export class RegisterDto {
   @IsString()
-  @MinLength(20, { message: 'Name must be at least 20 characters' })
-  @MaxLength(60, { message: 'Name must be at most 60 characters' })
+  @MinLength(2, { message: 'Name must be at least 2 characters' })
+  @MaxLength(255, { message: 'Name must be at most 255 characters' })
   name: string;
 
   @IsEmail({}, { message: 'Enter a valid email address' })
@@ -17,7 +17,7 @@ export class RegisterDto {
 
   @IsString()
   @MinLength(8, { message: 'Password must be at least 8 characters' })
-  @MaxLength(16, { message: 'Password must be at most 16 characters' })
+  @MaxLength(100, { message: 'Password must be at most 100 characters' })
   @Matches(/^(?=.*[A-Z])(?=.*[!@#$%^&*()\-_=+{};:,<.>])/, {
     message: 'Password must contain at least one uppercase letter and one special character',
   })

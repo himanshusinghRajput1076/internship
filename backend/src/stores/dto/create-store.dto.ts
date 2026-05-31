@@ -9,8 +9,8 @@ import {
 
 export class CreateStoreDto {
   @IsString()
-  @MinLength(20, { message: 'Store name must be at least 20 characters' })
-  @MaxLength(60, { message: 'Store name must be at most 60 characters' })
+  @MinLength(1, { message: 'Store name cannot be empty' })
+  @MaxLength(255, { message: 'Store name must be at most 255 characters' })
   name: string;
 
   @IsEmail({}, { message: 'Enter a valid email address' })

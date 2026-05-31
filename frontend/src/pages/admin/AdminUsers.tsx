@@ -187,7 +187,7 @@ const AdminUsers: React.FC = () => {
                 {addError && <div className="alert alert-error">{addError}</div>}
                 <div className="form-group">
                   <label>Full Name</label>
-                  <input type="text" className="form-input" placeholder="Min 20 characters" value={addForm.name} onChange={(e) => setAddForm(p => ({ ...p, name: e.target.value }))} required />
+                  <input type="text" className="form-input" placeholder="Enter full name" value={addForm.name} onChange={(e) => setAddForm(p => ({ ...p, name: e.target.value }))} required />
                 </div>
                 <div className="form-group">
                   <label>Email</label>
@@ -195,7 +195,7 @@ const AdminUsers: React.FC = () => {
                 </div>
                 <div className="form-group">
                   <label>Password</label>
-                  <input type="password" className="form-input" placeholder="8-16 chars, uppercase + special" value={addForm.password} onChange={(e) => setAddForm(p => ({ ...p, password: e.target.value }))} required />
+                  <input type="password" className="form-input" placeholder="Min 8 chars, uppercase + special" value={addForm.password} onChange={(e) => setAddForm(p => ({ ...p, password: e.target.value }))} required />
                 </div>
                 <div className="form-group">
                   <label>Address</label>

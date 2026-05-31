@@ -23,8 +23,8 @@ const ChangePassword: React.FC = () => {
     setError('');
     setSuccess('');
 
-    if (next.length < 8 || next.length > 16) {
-      setError('New password must be 8–16 characters');
+    if (next.length < 8 || next.length > 100) {
+      setError('New password must be 8–100 characters');
       return;
     }
     if (!PASSWORD_REGEX.test(next)) {
@@ -98,7 +98,7 @@ const ChangePassword: React.FC = () => {
                 id="next"
                 type="password"
                 className="form-input"
-                placeholder="8–16 chars, 1 uppercase, 1 special"
+                placeholder="Min 8 chars, 1 uppercase, 1 special"
                 value={next}
                 onChange={(e) => setNext(e.target.value)}
                 required

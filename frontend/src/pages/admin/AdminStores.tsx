@@ -196,7 +196,7 @@ const AdminStores: React.FC = () => {
                 {addError && <div className="alert alert-error">{addError}</div>}
                 <div className="form-group">
                   <label>Store Name</label>
-                  <input type="text" className="form-input" placeholder="Min 20 characters" value={addForm.name} onChange={(e) => setAddForm(p => ({ ...p, name: e.target.value }))} required />
+                  <input type="text" className="form-input" placeholder="Enter store name" value={addForm.name} onChange={(e) => setAddForm(p => ({ ...p, name: e.target.value }))} required />
                 </div>
                 <div className="form-group">
                   <label>Email</label>

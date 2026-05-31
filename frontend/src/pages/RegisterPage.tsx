@@ -22,11 +22,11 @@ const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 const validate = (form: FormState): FormErrors => {
   const errors: FormErrors = {};
-  if (form.name.length < 20) errors.name = 'Name must be at least 20 characters';
-  else if (form.name.length > 60) errors.name = 'Name must be at most 60 characters';
+  if (form.name.length < 2) errors.name = 'Name must be at least 2 characters';
+  else if (form.name.length > 255) errors.name = 'Name must be at most 255 characters';
   if (!EMAIL_REGEX.test(form.email)) errors.email = 'Enter a valid email address';
-  if (form.password.length < 8 || form.password.length > 16)
-    errors.password = 'Password must be 8–16 characters';
+  if (form.password.length < 8 || form.password.length > 100)
+    errors.password = 'Password must be 8–100 characters';
   else if (!PASSWORD_REGEX.test(form.password))
     errors.password = 'Must include an uppercase letter and a special character';
   if (form.address.length === 0) errors.address = 'Address is required';
@@ -87,7 +87,7 @@ const RegisterPage: React.FC = () => {
                 name="name"
                 type="text"
                 className="form-input"
-                placeholder="At least 20 characters"
+                placeholder="At least 2 characters"
                 value={form.name}
                 onChange={handleChange}
                 required
@@ -118,7 +118,7 @@ const RegisterPage: React.FC = () => {
               name="password"
               type="password"
               className="form-input"
-              placeholder="8–16 chars, 1 uppercase, 1 special character"
+              placeholder="8–100 chars, 1 uppercase, 1 special character"
               value={form.password}
               onChange={handleChange}
               required
