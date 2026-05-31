@@ -3,6 +3,7 @@ import {
   Controller,
   Get,
   Param,
+  Patch,
   Post,
   Query,
   UseGuards,
@@ -41,5 +42,12 @@ export class StoresController {
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.storesService.findById(id);
+  }
+
+  @Patch(':id')
+  @UseGuards(RolesGuard)
+  @Roles(UserRole.ADMIN)
+  update(@Param('id') id: string, @Body() dto: Partial<CreateStoreDto>) {
+    return this.storesService.update(id, dto);
   }
 }

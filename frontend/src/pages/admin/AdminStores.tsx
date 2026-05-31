@@ -7,6 +7,8 @@ interface Store {
   name: string;
   email: string;
   address: string;
+  owner_id: string | null;
+  owner: { id: string; name: string } | null;
   avgRating: number | null;
   ratingCount: number;
 }
@@ -15,13 +17,20 @@ type SortField = 'name' | 'email' | 'address';
 
 const AdminStores: React.FC = () => {
   const [stores, setStores] = useState<Store[]>([]);
+  const [owners, setOwners] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState({ name: '', address: '' });
   const [sort, setSort] = useState<{ field: SortField; order: 'ASC' | 'DESC' }>({ field: 'name', order: 'ASC' });
+  
   const [showAddModal, setShowAddModal] = useState(false);
   const [addForm, setAddForm] = useState({ name: '', email: '', address: '', owner_id: '' });
   const [addError, setAddError] = useState('');
   const [addLoading, setAddLoading] = useState(false);
+
+  const [assignModal, setAssignModal] = useState<Store | null>(null);
+  const [selectedOwnerId, setSelectedOwnerId] = useState('');
+  const [assignLoading, setAssignLoading] = useState(false);
+  const [assignError, setAssignError] = useState('');
 
   const fetchStores = useCallback(() => {
     setLoading(true);
@@ -36,7 +45,16 @@ const AdminStores: React.FC = () => {
       .finally(() => setLoading(false));
   }, [filters, sort]);
 
-  useEffect(() => { fetchStores(); }, [fetchStores]);
+  const fetchOwners = useCallback(() => {
+    api.get('/users?role=store_owner')
+      .then((res) => setOwners(res.data))
+      .catch(console.error);
+  }, []);
+
+  useEffect(() => {
+    fetchStores();
+    fetchOwners();
+  }, [fetchStores, fetchOwners]);
 
   const toggleSort = (field: SortField) => {
     setSort((prev) =>
@@ -57,12 +75,42 @@ const AdminStores: React.FC = () => {
       setShowAddModal(false);
       setAddForm({ name: '', email: '', address: '', owner_id: '' });
       fetchStores();
+      fetchOwners();
     } catch (err: any) {
       setAddError(err.response?.data?.message ?? 'Failed to create store');
     } finally {
       setAddLoading(false);
     }
   };
+
+  const handleAssignOwner = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!assignModal) return;
+    setAssignError('');
+    setAssignLoading(true);
+    try {
+      await api.patch(`/stores/${assignModal.id}`, { owner_id: selectedOwnerId || null });
+      setAssignModal(null);
+      setSelectedOwnerId('');
+      fetchStores();
+      fetchOwners();
+    } catch (err: any) {
+      setAssignError(err.response?.data?.message ?? 'Failed to assign owner');
+    } finally {
+      setAssignLoading(false);
+    }
+  };
+
+  const openAssignModal = (store: Store) => {
+    setAssignModal(store);
+    setSelectedOwnerId('');
+    setAssignError('');
+  };
+
+  // Filter owners who are NOT already assigned to any store
+  const unassignedOwners = owners.filter(
+    (owner) => !stores.some((store) => store.owner_id === owner.id)
+  );
 
   return (
     <div className="layout">
@@ -97,6 +145,7 @@ const AdminStores: React.FC = () => {
                   <th onClick={() => toggleSort('name')}>Name <i className="sort-icon">{sortIcon('name')}</i></th>
                   <th onClick={() => toggleSort('email')}>Email <i className="sort-icon">{sortIcon('email')}</i></th>
                   <th onClick={() => toggleSort('address')}>Address <i className="sort-icon">{sortIcon('address')}</i></th>
+                  <th>Owner</th>
                   <th>Avg Rating</th>
                   <th># Ratings</th>
                 </tr>
@@ -107,6 +156,21 @@ const AdminStores: React.FC = () => {
                     <td>{s.name}</td>
                     <td className="text-muted">{s.email}</td>
                     <td className="text-muted">{s.address.substring(0, 40)}{s.address.length > 40 ? '…' : ''}</td>
+                    <td>
+                      {s.owner ? (
+                        <span className="badge badge-store_owner" style={{ fontSize: '0.8rem', padding: '0.2rem 0.6rem' }}>
+                          👤 {s.owner.name}
+                        </span>
+                      ) : (
+                        <button
+                          className="btn-primary btn-sm"
+                          style={{ width: 'auto', padding: '0.15rem 0.5rem', fontSize: '0.75rem', borderRadius: '4px' }}
+                          onClick={() => openAssignModal(s)}
+                        >
+                          Assign Owner
+                        </button>
+                      )}
+                    </td>
                     <td>
                       {s.avgRating != null
                         ? <span style={{ color: 'var(--star-filled)', fontWeight: 600 }}>⭐ {s.avgRating}</span>
@@ -120,6 +184,7 @@ const AdminStores: React.FC = () => {
           )}
         </div>
 
+        {/* Add New Store Modal */}
         {showAddModal && (
           <div className="modal-overlay" onClick={() => setShowAddModal(false)}>
             <div className="modal" onClick={(e) => e.stopPropagation()}>
@@ -142,13 +207,64 @@ const AdminStores: React.FC = () => {
                   <textarea className="form-input form-textarea" rows={2} value={addForm.address} onChange={(e) => setAddForm(p => ({ ...p, address: e.target.value }))} required />
                 </div>
                 <div className="form-group">
-                  <label>Owner ID <span className="text-muted">(optional)</span></label>
-                  <input type="text" className="form-input" placeholder="UUID of a store_owner user" value={addForm.owner_id} onChange={(e) => setAddForm(p => ({ ...p, owner_id: e.target.value }))} />
+                  <label>Owner <span className="text-muted">(optional - unique selection)</span></label>
+                  <select
+                    className="form-input"
+                    value={addForm.owner_id}
+                    onChange={(e) => setAddForm(p => ({ ...p, owner_id: e.target.value }))}
+                  >
+                    <option value="">No Owner Assigned</option>
+                    {unassignedOwners.map((owner) => (
+                      <option key={owner.id} value={owner.id}>
+                        {owner.name} ({owner.email})
+                      </option>
+                    ))}
+                  </select>
                 </div>
                 <div className="modal-footer">
                   <button type="button" className="btn-secondary" onClick={() => setShowAddModal(false)}>Cancel</button>
                   <button type="submit" className="btn-primary btn-sm" disabled={addLoading} style={{ width: 'auto' }}>
                     {addLoading ? <span className="spinner" /> : 'Create Store'}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+
+        {/* Assign Owner Modal */}
+        {assignModal && (
+          <div className="modal-overlay" onClick={() => setAssignModal(null)}>
+            <div className="modal" style={{ maxWidth: 400 }} onClick={(e) => e.stopPropagation()}>
+              <div className="modal-header">
+                <span className="modal-title">Assign Store Owner</span>
+                <button className="modal-close" onClick={() => setAssignModal(null)}>×</button>
+              </div>
+              <form onSubmit={handleAssignOwner} className="auth-form">
+                {assignError && <div className="alert alert-error">{assignError}</div>}
+                <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginBottom: '1rem' }}>
+                  Assign an owner to <strong>{assignModal.name}</strong>. Only unassigned store owners are available for selection.
+                </p>
+                <div className="form-group">
+                  <label>Select Owner</label>
+                  <select
+                    className="form-input"
+                    value={selectedOwnerId}
+                    onChange={(e) => setSelectedOwnerId(e.target.value)}
+                    required
+                  >
+                    <option value="">-- Choose Owner --</option>
+                    {unassignedOwners.map((owner) => (
+                      <option key={owner.id} value={owner.id}>
+                        {owner.name} ({owner.email})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="modal-footer">
+                  <button type="button" className="btn-secondary" onClick={() => setAssignModal(null)}>Cancel</button>
+                  <button type="submit" className="btn-primary btn-sm" disabled={assignLoading} style={{ width: 'auto' }}>
+                    {assignLoading ? <span className="spinner" /> : 'Assign'}
                   </button>
                 </div>
               </form>
