@@ -36,7 +36,7 @@ export class User {
   @Column({ length: 400 })
   address: string;
 
-  @Column({ type: 'enum', enum: UserRole, default: UserRole.USER })
+  @Column({ type: 'simple-enum', enum: UserRole, default: UserRole.USER })
   role: UserRole;
 
   @CreateDateColumn()

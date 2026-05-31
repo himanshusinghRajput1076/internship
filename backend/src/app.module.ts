@@ -21,17 +21,29 @@ import { UsersModule } from './users/users.module';
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
-      useFactory: (config: ConfigService) => ({
-        type: 'postgres',
-        host: config.get<string>('DB_HOST', 'localhost'),
-        port: config.get<number>('DB_PORT', 5432),
-        username: config.get<string>('DB_USERNAME', 'postgres'),
-        password: config.get<string>('DB_PASSWORD'),
-        database: config.get<string>('DB_DATABASE', 'store_ratings'),
-        entities: [User, Store, Rating],
-        synchronize: true, // Auto-creates tables from entities
-        logging: false,
-      }),
+      useFactory: (config: ConfigService): any => {
+        const dbType = config.get<string>('DB_TYPE', 'postgres') as any;
+        if (dbType === 'sqlite') {
+          return {
+            type: 'better-sqlite3',
+            database: config.get<string>('DB_DATABASE', 'store_ratings.sqlite'),
+            entities: [User, Store, Rating],
+            synchronize: true,
+            logging: false,
+          };
+        }
+        return {
+          type: dbType,
+          host: config.get<string>('DB_HOST', 'localhost'),
+          port: config.get<number>('DB_PORT', dbType === 'mysql' ? 3306 : 5432),
+          username: config.get<string>('DB_USERNAME', dbType === 'mysql' ? 'root' : 'postgres'),
+          password: config.get<string>('DB_PASSWORD'),
+          database: config.get<string>('DB_DATABASE', 'store_ratings'),
+          entities: [User, Store, Rating],
+          synchronize: true, // Auto-creates tables from entities
+          logging: false,
+        };
+      },
     }),
 
     AuthModule,

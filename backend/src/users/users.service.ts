@@ -86,9 +86,16 @@ export class UsersService {
 
     return this.usersRepo.find({
       where,
-      order: { [sortBy]: sortOrder },
+      order: { [sortBy]: sortOrder as any },
       // Never expose passwords in list responses
-      select: ['id', 'name', 'email', 'address', 'role', 'created_at'],
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        address: true,
+        role: true,
+        created_at: true,
+      },
     });
   }
 
@@ -99,8 +106,15 @@ export class UsersService {
   async getDetail(id: string) {
     const user = await this.usersRepo.findOne({
       where: { id },
-      relations: ['store', 'store.ratings'],
-      select: ['id', 'name', 'email', 'address', 'role', 'created_at'],
+      relations: { store: { ratings: true } },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        address: true,
+        role: true,
+        created_at: true,
+      },
     });
     if (!user) throw new NotFoundException('User not found');
 

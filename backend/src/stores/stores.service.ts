@@ -44,13 +44,13 @@ export class StoresService {
         'store.address',
         'store.created_at',
       ])
-      .addSelect('ROUND(AVG(rating.value)::numeric, 2)', 'avg_rating')
-      .addSelect('COUNT(rating.id)::int', 'rating_count')
+      .addSelect('ROUND(AVG(rating.value), 2)', 'avg_rating')
+      .addSelect('COUNT(rating.id)', 'rating_count')
       .groupBy('store.id')
       .orderBy(`store.${sortBy}`, sortOrder);
 
-    if (name) qb.andWhere('store.name ILIKE :name', { name: `%${name}%` });
-    if (address) qb.andWhere('store.address ILIKE :address', { address: `%${address}%` });
+    if (name) qb.andWhere('LOWER(store.name) LIKE LOWER(:name)', { name: `%${name}%` });
+    if (address) qb.andWhere('LOWER(store.address) LIKE LOWER(:address)', { address: `%${address}%` });
 
     const raw = await qb.getRawMany();
 
@@ -68,7 +68,7 @@ export class StoresService {
   async findById(id: string) {
     const store = await this.storesRepo.findOne({
       where: { id },
-      relations: ['owner', 'ratings', 'ratings.user'],
+      relations: { owner: true, ratings: { user: true } },
     });
     if (!store) throw new NotFoundException('Store not found');
 
